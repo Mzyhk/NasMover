@@ -1,0 +1,80 @@
+@using NasMover.Core
+@inject AppRuntime Runtime
+@implements IDisposable
+
+<div class="panel path-panel">
+    <div class="panel-title">路径信息</div>
+
+    @if (Runtime.Config == null)
+    {
+        <div class="panel-row"><span class="label">配置未加载</span></div>
+    }
+    else
+    {
+        @* 源目录 *@
+        @foreach (var src in GetSourceDirs())
+        {
+            <div class="panel-row">
+                <span class="label">源目录:</span>
+                <span class="value mono" title="@src">@TruncatePath(src, 60)</span>
+                <button class="btn-small" @onclick="() => OpenPath(src)">打开</button>
+            </div>
+        }
+
+        @* NAS 目标 *@
+        <div class="panel-row">
+            <span class="label">NAS 目标:</span>
+            <span class="value mono" title="@Runtime.Config.DestinationRoot">@TruncatePath(Runtime.Config.DestinationRoot, 60)</span>
+            <button class="btn-small" @onclick="() => OpenPath(Runtime.Config.HotConfig.NasBasePath)">打开</button>
+        </div>
+
+        @* 配置文件 *@
+        <div class="panel-row">
+            <span class="label">配置文件:</span>
+            <span class="value mono" title="@(Runtime.ConfigFilePath ?? "未找到")">@TruncatePath(Runtime.ConfigFilePath ?? "未找到", 60)</span>
+            <button class="btn-small" @onclick="() => OpenConfigFile()">打开</button>
+        </div>
+    }
+</div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        Runtime.ConfigLoaded += OnConfigLoaded;
+    }
+
+    private void OnConfigLoaded(AppConfig config) => InvokeAsync(StateHasChanged);
+
+    private List<string> GetSourceDirs()
+    {
+        var model = Runtime.Config?.HotConfig?.ActiveModelConfig;
+        return model?.BaseDirs ?? new();
+    }
+
+    private void OpenPath(string path)
+    {
+        ShellHelper.OpenInExplorer(path);
+    }
+
+    private void OpenConfigFile()
+    {
+        var path = Runtime.ConfigFilePath;
+        if (path != null)
+            ShellHelper.OpenInExplorer(path);
+    }
+
+    private static string TruncatePath(string path, int maxLen)
+    {
+        if (string.IsNullOrEmpty(path) || path.Length <= maxLen)
+            return path ?? "";
+
+        int headLen = maxLen / 3;
+        int tailLen = maxLen - headLen - 3;
+        return path[..headLen] + "..." + path[^tailLen..];
+    }
+
+    public void Dispose()
+    {
+        Runtime.ConfigLoaded -= OnConfigLoaded;
+    }
+}

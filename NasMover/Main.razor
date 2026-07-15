@@ -1,0 +1,81 @@
+@inject AppRuntime Runtime
+@inject IJSRuntime JS
+@implements IDisposable
+
+<div class="app-container">
+    <StatusPanel Mode="@_mode" Config="@Runtime.Config" />
+
+    <PathPanel />
+
+    <ConfigPanel />
+
+    <ProgressPanel Progress="@_progress"
+                   CurrentFile="@_currentFile" />
+
+    <ControlPanel Mode="@_mode"
+                  OnStart="@StartAsync"
+                  OnStop="@Stop"
+                  OnPause="@Pause"
+                  OnResume="@ResumeAsync" />
+
+    <LogPanel LogLines="@_logLines" />
+</div>
+
+@code {
+    private AppMode _mode = AppMode.Idle;
+    private TransferProgress? _progress;
+    private string? _currentFile;
+
+    private readonly List<string> _logLines = new();
+    private const int MaxLogLines = 500;
+    private readonly object _logLock = new();
+    private bool _disposed;
+
+    protected override void OnInitialized()
+    {
+        Runtime.ModeChanged += OnModeChanged;
+        Runtime.TransferProgress += OnProgress;
+        Runtime.LogMessage += OnLog;
+
+        Runtime.LoadConfig();
+    }
+
+    private void OnModeChanged(AppMode mode)
+    {
+        _mode = mode;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void OnProgress(TransferProgress progress)
+    {
+        _progress = progress;
+        _currentFile = progress.CurrentFile;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void OnLog(string message)
+    {
+        var line = $"[{DateTime.Now:HH:mm:ss}] {message}";
+        lock (_logLock)
+        {
+            _logLines.Add(line);
+            if (_logLines.Count > MaxLogLines)
+                _logLines.RemoveRange(0, _logLines.Count - MaxLogLines);
+        }
+        InvokeAsync(StateHasChanged);
+    }
+
+    private async Task StartAsync()  => await Runtime.StartScanAsync();
+    private void Stop()              => Runtime.RequestStop();
+    private void Pause()             => Runtime.RequestPause();
+    private async Task ResumeAsync() => await Runtime.RequestResumeAsync();
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        Runtime.ModeChanged -= OnModeChanged;
+        Runtime.TransferProgress -= OnProgress;
+        Runtime.LogMessage -= OnLog;
+    }
+}

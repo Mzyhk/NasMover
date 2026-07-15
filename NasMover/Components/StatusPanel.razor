@@ -1,0 +1,47 @@
+<div class="status-panel">
+    <div>
+        <span class="status-dot @GetStatusClass()">● @GetStatusText()</span>
+    </div>
+    <div>
+        <span class="label">机种: </span><span class="value">@GetModel()</span>
+        <span class="label" style="margin-left: 20px">机台: </span><span class="value">@GetMachineId()</span>
+    </div>
+    <div>
+        <span class="label">NAS地址: </span><span class="value" title="@GetNasPath()">@GetNasPath()</span>
+    </div>
+</div>
+
+@code {
+    [Parameter] public AppMode Mode { get; set; }
+    [Parameter] public AppConfig? Config { get; set; }
+
+    private string GetStatusClass() => Mode switch
+    {
+        AppMode.Idle         => "idle",
+        AppMode.Scanning     => "scanning",
+        AppMode.Transferring => "transferring",
+        AppMode.Pausing      => "pausing",
+        AppMode.Paused       => "paused",
+        AppMode.Stopping     => "stopping",
+        AppMode.Completed    => "completed",
+        AppMode.Error        => "error",
+        _ => "idle"
+    };
+
+    private string GetStatusText() => Mode switch
+    {
+        AppMode.Idle         => "空闲",
+        AppMode.Scanning     => "扫描中",
+        AppMode.Transferring => "传输中",
+        AppMode.Pausing      => "暂停中",
+        AppMode.Paused       => "已暂停",
+        AppMode.Stopping     => "停止中",
+        AppMode.Completed    => "已完成",
+        AppMode.Error        => "错误",
+        _ => Mode.ToString()
+    };
+
+    private string GetMachineId() => Config?.ColdConfig?.MachineId ?? "未加载";
+    private string GetModel()     => Config?.HotConfig?.ActiveModel ?? "未加载";
+    private string GetNasPath()   => Config?.HotConfig?.NasBasePath ?? "未加载";
+}

@@ -1,0 +1,31 @@
+<div class="progress-panel">
+    <div class="progress-bar-track">
+        <div class="progress-bar-fill" style="width: @(Percent * 100)%"></div>
+    </div>
+    <div class="progress-text">
+        @if (TotalFiles > 0)
+        {
+            @($"{CompletedFiles} / {TotalFiles}  ({Percent * 100:F1}%)")
+        }
+        else
+        {
+            @("就绪")
+        }
+    </div>
+    <div class="current-file">@CurrentFileText</div>
+</div>
+
+@code {
+    [Parameter] public TransferProgress? Progress { get; set; }
+    [Parameter] public string? CurrentFile { get; set; }
+
+    private int CompletedFiles => Progress?.CompletedFiles ?? 0;
+    private int TotalFiles     => Progress?.TotalFiles ?? 0;
+    private double Percent     => Progress?.Percent ?? 0;
+
+    private string CurrentFileText => Progress == null
+        ? "就绪"
+        : string.IsNullOrEmpty(CurrentFile)
+            ? $"已完成 {CompletedFiles} 个文件"
+            : $"正在传输: {CurrentFile}";
+}

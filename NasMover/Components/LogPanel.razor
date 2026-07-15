@@ -1,0 +1,20 @@
+@inject IJSRuntime JS
+
+<div class="log-panel">
+    <div class="log-area" @ref="_logArea">
+        @foreach (var line in LogLines)
+        {
+            <div class="log-line">@line</div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public List<string> LogLines { get; set; } = new();
+    private ElementReference _logArea;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await JS.InvokeVoidAsync("scrollToBottom", _logArea);
+    }
+}

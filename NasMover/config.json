@@ -1,0 +1,92 @@
+{
+  "cold_config": {
+    "machine_id": "DEV-001",
+    "schedule_cron": "0 2 * * *",
+    "software_update_url": ""
+  },
+  "hot_config": {
+    "nas_base_path": "D:\\000A\\NAS-Mover\\demo_fixture\\target",
+    "default_worker_threads": 2,
+    "worker_threads_limit": 4,
+    "delete_after_transfer": false,
+    "active_model": "test_dev",
+    "models": {
+      "test_dev": {
+        "base_dirs": [
+          "D:\\000A\\NAS-Mover\\demo_fixture\\source\\test_dev"
+        ],
+        "ignore_today_format": "",
+        "exclude_dirs": [
+          "TestRun",
+          "Debug",
+          "temp"
+        ],
+        "file_rules": {
+          "allowed_extensions": [
+            "jpg",
+            "bmp",
+            "png"
+          ],
+          "require_prefix": [],
+          "exclude_suffix": [
+            "_NG",
+            "_FAIL"
+          ]
+        }
+      },
+      "MODEL_A_PRO": {
+        "base_dirs": [
+          "D:\\000A\\NAS-Mover\\demo_fixture\\source\\MODEL_A_PRO",
+          "D:\\000A\\NAS-Mover\\demo_fixture\\source\\Shared"
+        ],
+        "ignore_today_format": "%Y_%m_%d",
+        "exclude_dirs": [
+          "TestRun",
+          "Debug",
+          "Calibration"
+        ],
+        "file_rules": {
+          "allowed_extensions": [
+            "jpg",
+            "bmp"
+          ],
+          "require_prefix": [
+            "Pick_",
+            "OK_"
+          ],
+          "exclude_suffix": [
+            "_NG",
+            "_FAIL"
+          ]
+        }
+      }
+    }
+  },
+  "cloud_control": {
+    "enabled": false,
+    "transport": "http",
+    "manifest_url": "",
+    "check_mode": "manual",
+    "check_hour": 0,
+    "request_timeout_seconds": 15,
+    "machine_group": "dev-group",
+    "auth_token": ""
+  },
+  "update_control": {
+    "enabled": false,
+    "transport": "http",
+    "manifest_url": "",
+    "check_mode": "manual",
+    "check_hour": 0,
+    "request_timeout_seconds": 30,
+    "auth_token": ""
+  },
+  "status_report": {
+    "enabled": false,
+    "endpoint_url": "",
+    "heartbeat_interval_seconds": 30,
+    "active_report_interval_seconds": 15,
+    "request_timeout_seconds": 5,
+    "auth_token": ""
+  }
+}

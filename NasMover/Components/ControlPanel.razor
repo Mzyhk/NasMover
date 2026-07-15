@@ -1,0 +1,19 @@
+<div class="control-panel">
+    <button class="btn btn-start" disabled="@(!CanStart)"  @onclick="() => OnStart.InvokeAsync()">开始</button>
+    <button class="btn btn-stop"  disabled="@(!CanStop)"   @onclick="() => OnStop.InvokeAsync()">停止</button>
+    <button class="btn btn-pause" disabled="@(!CanPause)"  @onclick="() => OnPause.InvokeAsync()">暂停</button>
+    <button class="btn btn-resume" disabled="@(!CanResume)" @onclick="() => OnResume.InvokeAsync()">继续</button>
+</div>
+
+@code {
+    [Parameter] public AppMode Mode { get; set; }
+    [Parameter] public EventCallback OnStart  { get; set; }
+    [Parameter] public EventCallback OnStop   { get; set; }
+    [Parameter] public EventCallback OnPause  { get; set; }
+    [Parameter] public EventCallback OnResume { get; set; }
+
+    private bool CanStart  => Mode is AppMode.Idle or AppMode.Completed or AppMode.Error;
+    private bool CanStop   => Mode is AppMode.Scanning or AppMode.Transferring or AppMode.Pausing or AppMode.Paused;
+    private bool CanPause  => Mode == AppMode.Transferring;
+    private bool CanResume => Mode == AppMode.Paused;
+}

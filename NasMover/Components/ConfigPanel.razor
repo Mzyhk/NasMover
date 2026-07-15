@@ -1,0 +1,121 @@
+@inject AppRuntime Runtime
+
+<div class="panel config-panel">
+    <div class="panel-title">配置</div>
+
+    <div class="config-fields">
+        <div class="config-row">
+            <span class="label">工作线程数:</span>
+            <input type="number" class="input-number"
+                   min="1" max="@_maxThreads"
+                   @bind="_workerThreads"
+                   disabled="@(IsBusy)" />
+            <span class="hint">(上限 @_maxThreads)</span>
+        </div>
+
+        <div class="config-row">
+            <label class="checkbox-label">
+                <input type="checkbox" @bind="_deleteAfterTransfer" disabled="@(IsBusy)" />
+                传输后删除源文件
+            </label>
+        </div>
+    </div>
+
+    <div class="config-actions">
+        <button class="btn btn-small2" disabled="@IsBusy" @onclick="ReloadAsync">重载配置</button>
+        <button class="btn btn-small2" disabled="@IsBusy" @onclick="CheckCloudAsync">检查云控</button>
+        <button class="btn btn-small2 btn-save" disabled="@IsBusy" @onclick="SaveAsync">保存配置</button>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_cloudResult))
+    {
+        <div class="cloud-result">@_cloudResult</div>
+    }
+</div>
+
+@code {
+    private int _workerThreads;
+    private bool _deleteAfterTransfer;
+    private int _maxThreads = 1;
+    private bool _isBusy;
+    private string? _cloudResult;
+
+    private bool IsBusy => _isBusy || Runtime.CurrentMode
+        is AppMode.Scanning or AppMode.Transferring or AppMode.Pausing or AppMode.Stopping;
+
+    protected override void OnInitialized()
+    {
+        Runtime.ConfigLoaded += OnConfigLoaded;
+        Runtime.ModeChanged += _ => InvokeAsync(StateHasChanged);
+        LoadFromConfig();
+    }
+
+    private void OnConfigLoaded(AppConfig config)
+    {
+        LoadFromConfig();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void LoadFromConfig()
+    {
+        var hc = Runtime.Config?.HotConfig;
+        if (hc != null)
+        {
+            _workerThreads = hc.DefaultWorkerThreads ?? hc.WorkerThreadsLimit;
+            _deleteAfterTransfer = hc.DeleteAfterTransfer;
+            _maxThreads = hc.WorkerThreadsLimit;
+        }
+    }
+
+    private async Task ReloadAsync()
+    {
+        _isBusy = true;
+        try
+        {
+            Runtime.ReloadConfig();
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        _isBusy = true;
+        try
+        {
+            var hc = Runtime.Config?.HotConfig;
+            if (hc != null)
+            {
+                hc.DefaultWorkerThreads = _workerThreads;
+                hc.DeleteAfterTransfer = _deleteAfterTransfer;
+            }
+            Runtime.SaveConfig();
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    private async Task CheckCloudAsync()
+    {
+        _isBusy = true;
+        _cloudResult = null;
+        try
+        {
+            _cloudResult = await Runtime.CheckCloudControlAsync();
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+    public void Dispose()
+    {
+        Runtime.ConfigLoaded -= OnConfigLoaded;
+        Runtime.ModeChanged -= _ => InvokeAsync(StateHasChanged);
+    }
+}
